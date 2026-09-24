@@ -41,7 +41,9 @@ python scripts/tutorial_02_gravity_collision.py
 The model does not assign an independent stiffness to every spring. It uses a base stiffness and regional scale parameters:
 
 ```text
-k_spring = BASE_STIFFNESS × global_scale × region_scale
+Stage 1: estimate global_scale
+Stage 2: initialize region_scale from global_scale
+k_spring = BASE_STIFFNESS × region_scale
 ```
 
 Ground Truth is defined using physical regional `k` values, while damping remains fixed.

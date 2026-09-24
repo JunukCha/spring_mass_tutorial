@@ -59,15 +59,15 @@ def region_id_from_particle(particle_index):
     return 2
 
 
-def spring_stiffness(i, j, global_scale, region_scales):
+def spring_stiffness(i, j, region_scales):
     region_i = region_id_from_particle(i)
     region_j = region_id_from_particle(j)
     region = round((region_i + region_j) / 2)
     region = min(region, len(region_scales) - 1)
-    return BASE_STIFFNESS * global_scale * float(region_scales[region])
+    return BASE_STIFFNESS * float(region_scales[region])
 
 
-def build_model(global_scale, region_scales, device):
+def build_model(region_scales, device):
     builder = newton.ModelBuilder(
         up_axis="Z",
         gravity=(0.0, 0.0, -GRAVITY),
@@ -90,7 +90,7 @@ def build_model(global_scale, region_scales, device):
         builder.add_spring(
             i,
             j,
-            spring_stiffness(i, j, global_scale, region_scales),
+            spring_stiffness(i, j, region_scales),
             SPRING_DAMPING,
             0.0,
         )
@@ -98,10 +98,8 @@ def build_model(global_scale, region_scales, device):
     for row in range(ROWS):
         for col in range(COLS):
             current = particle_id(row, col)
-
             if col < COLS - 1:
                 add_spring(current, particle_id(row, col + 1))
-
             if row < ROWS - 1:
                 add_spring(current, particle_id(row + 1, col))
 
@@ -123,12 +121,11 @@ def build_model(global_scale, region_scales, device):
         restitution=GROUND_RESTITUTION,
     )
     builder.add_ground_plane(height=GROUND_Z, cfg=ground_config)
-
     return builder.finalize(device=device)
 
 
-def simulate(global_scale, region_scales, device, num_steps):
-    model = build_model(global_scale, region_scales, device)
+def simulate(region_scales, device, num_steps):
+    model = build_model(region_scales, device)
     solver = SolverXPBD(model, enable_restitution=True)
     collision_pipeline = newton.CollisionPipeline(model)
     contacts = collision_pipeline.contacts()
@@ -149,56 +146,45 @@ def simulate(global_scale, region_scales, device, num_steps):
 
 
 def simulate_ground_truth(device, num_steps):
-    """Simulate Ground Truth from physical k values."""
-
-    return simulate(
-        1.0,
-        GROUND_TRUTH_K / BASE_STIFFNESS,
-        device,
-        num_steps,
-    )
+    return simulate(GROUND_TRUTH_K / BASE_STIFFNESS, device, num_steps)
 
 
-def decode_parameters(log_parameters):
-    global_scale = float(np.exp(log_parameters[0]))
-    region_logs = log_parameters[1:] - np.mean(log_parameters[1:])
-    return global_scale, np.exp(region_logs)
+def optimize_global_scale(target, device):
+    def loss(log_scale):
+        scale = float(np.exp(log_scale[0]))
+        prediction = simulate(
+            np.full(3, scale),
+            device,
+            OPTIMIZATION_STEPS,
+        )
+        error = prediction[::OPTIMIZATION_STRIDE] - target[::OPTIMIZATION_STRIDE]
+        return float(np.mean(error * error))
 
-
-def trajectory_loss(log_parameters, target, device):
-    global_scale, region_scales = decode_parameters(log_parameters)
-    prediction = simulate(
-        global_scale,
-        region_scales,
-        device,
-        OPTIMIZATION_STEPS,
-    )
-    error = (
-        prediction[::OPTIMIZATION_STRIDE]
-        - target[::OPTIMIZATION_STRIDE]
-    )
-    return float(np.mean(error * error))
-
-
-def optimize_scales(target, device):
-    initial_parameters = np.log(
-        [1.0, INITIAL_SCALES[0], INITIAL_SCALES[1], INITIAL_SCALES[2]]
-    )
     result = minimize(
-        trajectory_loss,
-        initial_parameters,
-        args=(target, device),
+        loss,
+        np.array([1.0]),
         method="Powell",
-        bounds=[(-2.0, 2.0)] * 4,
-        options={
-            "maxiter": 20,
-            "xtol": 1.0e-2,
-            "ftol": 1.0e-8,
-            "disp": True,
-        },
+        bounds=[(-2.0, 2.0)],
+        options={"maxiter": 10, "xtol": 1.0e-2, "ftol": 1.0e-8},
     )
-    global_scale, region_scales = decode_parameters(result.x)
-    return global_scale, region_scales, float(result.fun)
+    return float(np.exp(result.x[0])), float(result.fun)
+
+
+def optimize_region_scales(target, initial_global_scale, device):
+    def loss(log_scales):
+        scales = np.exp(log_scales)
+        prediction = simulate(scales, device, OPTIMIZATION_STEPS)
+        error = prediction[::OPTIMIZATION_STRIDE] - target[::OPTIMIZATION_STRIDE]
+        return float(np.mean(error * error))
+
+    result = minimize(
+        loss,
+        np.log(np.full(3, initial_global_scale)),
+        method="Powell",
+        bounds=[(-2.0, 2.0)] * 3,
+        options={"maxiter": 20, "xtol": 1.0e-2, "ftol": 1.0e-8},
+    )
+    return np.exp(result.x), float(result.fun)
 
 
 def draw_sheet(ax, positions, title, color):
@@ -261,7 +247,7 @@ def draw_sheet(ax, positions, title, color):
     ax.view_init(elev=25.0, azim=-65.0)
 
 
-def save_comparison(results, global_scale, region_scales):
+def save_comparison(results):
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     names = ["Initial Guess", "Optimized", "Ground Truth"]
 
@@ -337,37 +323,36 @@ def main():
         OPTIMIZATION_STEPS,
     )
 
-    print("Optimizing global and regional stiffness scales...")
-    optimized_global, optimized_regions, final_loss = optimize_scales(
+    print("Optimizing global stiffness scale...")
+    optimized_global, global_loss = optimize_global_scale(
         optimization_target,
+        device,
+    )
+
+    print("Optimizing regional stiffness scales...")
+    optimized_regions, final_loss = optimize_region_scales(
+        optimization_target,
+        optimized_global,
         device,
     )
 
     ground_truth = simulate_ground_truth(device, NUM_STEPS)
 
     print("Simulating Initial Guess...")
-    initial = simulate(1.0, INITIAL_SCALES, device, NUM_STEPS)
+    initial = simulate(INITIAL_SCALES, device, NUM_STEPS)
 
     print("Simulating Optimized...")
-    optimized = simulate(
-        optimized_global,
-        optimized_regions,
-        device,
-        NUM_STEPS,
-    )
+    optimized = simulate(optimized_regions, device, NUM_STEPS)
 
     initial_k = BASE_STIFFNESS * INITIAL_SCALES
-    optimized_k = (
-        BASE_STIFFNESS
-        * optimized_global
-        * optimized_regions
-    )
+    optimized_k = BASE_STIFFNESS * optimized_regions
 
     print(f"Ground Truth k: {GROUND_TRUTH_K}")
     print(f"Initial k:      {initial_k}")
     print(f"Optimized k:    {optimized_k}")
     print(f"Optimized global scale:  {optimized_global:.6f}")
     print(f"Optimized region scales: {optimized_regions}")
+    print(f"Global-stage loss: {global_loss:.8e}")
     print(f"Final trajectory loss: {final_loss:.8e}")
 
     save_comparison(
@@ -376,11 +361,10 @@ def main():
             "Optimized": optimized,
             "Ground Truth": ground_truth,
         },
-        optimized_global,
-        optimized_regions,
     )
     print(f"Results saved to: {OUTPUT_DIR}")
 
 
 if __name__ == "__main__":
     main()
+

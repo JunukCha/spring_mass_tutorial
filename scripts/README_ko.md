@@ -41,7 +41,9 @@ python scripts/tutorial_02_gravity_collision.py
 모든 spring에 서로 다른 stiffness를 주지 않고, 기준 stiffness와 영역별 scale을 사용합니다.
 
 ```text
-k_spring = BASE_STIFFNESS × global_scale × region_scale
+1단계: global_scale 최적화
+2단계: region_scale을 global_scale로 초기화
+최종: k_spring = BASE_STIFFNESS × region_scale
 ```
 
 현재 Ground Truth는 실제 지역별 `k` 값으로 정의하고, damping은 고정되어 있습니다.
