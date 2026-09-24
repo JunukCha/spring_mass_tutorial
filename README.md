@@ -1,6 +1,6 @@
 # Spring-Mass Inverse Modeling
 
-This project demonstrates a 2D spring-mass simulation and inverse modeling with NVIDIA Warp.
+This project demonstrates spring-mass simulation and inverse modeling with NVIDIA Warp and Newton.
 
 ## Tutorial 01
 
@@ -31,3 +31,15 @@ outputs/tutorial_01/
 Generated files include the animation GIF, optimization history, and trajectory comparison plot.
 
 See [README_ko.md](README_ko.md) for the Korean documentation.
+
+## Tutorial 02
+
+Tutorial 02 extends the model to a 3D spring-mass sheet and uses Newton, the modern physics engine built on NVIDIA Warp. It includes gravity, ground contact, restitution, and a reduced PhysTwin-style inverse fitting workflow.
+
+Instead of optimizing every spring independently, the model uses one global stiffness scale and three regional stiffness scales. The Ground Truth, Initial Guess, and Optimized trajectories are compared in a 3D animation.
+
+```bash
+python scripts/tutorial_02_gravity_collision.py
+```
+
+Results are saved to `outputs/tutorial_02/` as a GIF and a final-state PNG.

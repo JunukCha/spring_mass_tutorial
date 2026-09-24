@@ -1,36 +1,63 @@
-# Tutorial 01 설명
+# Tutorial Scripts
 
-`tutorial_01_spring_mass.py`는 다음 과정을 하나의 실습으로 보여줍니다.
+This directory contains the spring-mass tutorial scripts.
 
-1. 2차원 입자 격자 생성
-2. 구조 스프링과 전단 스프링 연결
-3. 상단 입자 고정
-4. 하단 중앙 입자에 임시 외력 적용
-5. 스프링 힘과 감쇠력 계산
-6. semi-implicit Euler 방식으로 시간 적분
-7. Warp autodiff로 스프링 강성 `k`의 gradient 계산
-8. Adam으로 `k` 역추정
-9. 결과를 GIF와 PNG로 저장
+## Tutorial 01
 
-## 실행
+`tutorial_01_spring_mass.py` covers:
 
-프로젝트 루트에서 실행합니다.
+- 2D spring-mass grid construction
+- Structural and shear springs
+- Fixed boundary conditions
+- Warp-based simulation
+- Spring stiffness `k` estimation
+- Automatic differentiation and Adam optimization
+
+Run it from the project root:
 
 ```bash
 python scripts/tutorial_01_spring_mass.py
 ```
 
-결과는 `outputs/tutorial_01/`에 저장됩니다.
+## Tutorial 02
 
-## 주요 함수
+`tutorial_02_gravity_collision.py` uses a 3D spring-mass sheet.
 
-- `particle_id()` — 격자 좌표를 입자 인덱스로 변환
-- `simulate_step()` — 한 타임스텝의 물리 계산 Warp 커널
-- `record_positions()` — 궤적 기록 Warp 커널
-- `compute_loss()` — 예측 궤적과 관측 궤적의 loss 계산
-- `simulate()` — 전체 시뮬레이션 실행
-- `trajectory_to_numpy()` — Warp 배열을 NumPy 궤적으로 변환
-- `draw_object()` — 입자와 스프링 시각화
-- `main()` — 관측 생성, 최적화, 결과 저장을 실행
+- Newton-based physics simulation
+- Gravity along the Z axis
+- Ground collision on the XY plane
+- Collision restitution
+- Global and regional stiffness optimization
+- Initial Guess / Optimized / Ground Truth comparison
 
-현재 모델에는 중력이 없고, `PUSH_FORCE`로 지정한 임시 아래 방향 외력만 적용됩니다.
+Run it from the project root:
+
+```bash
+python scripts/tutorial_02_gravity_collision.py
+```
+
+## Tutorial 02 parameterization
+
+The model does not assign an independent stiffness to every spring. It uses a base stiffness and regional scale parameters:
+
+```text
+k_spring = BASE_STIFFNESS × global_scale × region_scale
+```
+
+Ground Truth is defined using physical regional `k` values, while damping remains fixed.
+
+## Outputs
+
+Results are saved to:
+
+```text
+outputs/tutorial_01/
+outputs/tutorial_02/
+```
+
+Tutorial 02 generates:
+
+```text
+spring_mass_3d_comparison.gif
+spring_mass_3d_final_states.png
+```

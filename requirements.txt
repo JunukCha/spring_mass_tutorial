@@ -1,4 +1,5 @@
 numpy
 matplotlib
-warp-lang
+newton
 pillow
+scipy
