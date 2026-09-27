@@ -36,6 +36,18 @@ Run it from the project root:
 python scripts/tutorial_02_gravity_collision.py
 ```
 
+## Tutorial 03
+
+`tutorial_03_sparse_force_inference.py` fits time-varying XYZ forces at two known grasp particles (`p0` and `p5`) using Warp autodiff and Adam. It compares target, zero-force initial, and optimized cloth trajectories in a GIF.
+
+Run from the project root:
+
+```bash
+python scripts/tutorial_03_sparse_force_inference.py
+```
+
+Outputs are written to `outputs/tutorial_03/`. The `.npy` force arrays are shaped `(11, 36, 3)` in newtons (time knot, particle, XYZ); knots are 0.032 seconds apart. Files include target, initial, and optimized force controls, plus the target particle trajectory.
+
 ## Tutorial 02 parameterization
 
 The model does not assign an independent stiffness to every spring. It uses a base stiffness and regional scale parameters:

@@ -43,3 +43,28 @@ python scripts/tutorial_02_gravity_collision.py
 ```
 
 Results are saved to `outputs/tutorial_02/` as a GIF and a final-state PNG.
+
+## Tutorial 03
+
+Tutorial 03 estimates time-varying external forces on two known grasp particles (`p0` and `p5`) with Warp autodiff and Adam. The simulation includes all 36 particle trajectories, while the objective uses trajectory loss only. The GIF compares the target, zero-force initial state, and optimized result.
+
+```bash
+python scripts/tutorial_03_sparse_force_inference.py
+```
+
+Results are saved to `outputs/tutorial_03/`:
+
+```text
+cloth_trajectory_comparison.gif
+trajectory_and_force.png
+target_trajectory.npy
+ground_truth_force_knots.npy
+initial_force_knots.npy
+optimized_force_knots.npy
+```
+
+The force arrays have shape `(11, 36, 3)` in newtons, indexed by time knot, particle, and XYZ component. Knots are 0.032 seconds apart. To inspect the target and fitted forces at `p0` and `p5` from Windows CMD:
+
+```cmd
+python -c "import numpy as np; gt=np.load('outputs/tutorial_03/ground_truth_force_knots.npy'); fit=np.load('outputs/tutorial_03/optimized_force_knots.npy'); [print(f't={k*0.032:.3f}s p{p}: GT={gt[k,p]} Fit={fit[k,p]}') for k in range(len(gt)) for p in (0,5)]"
+```

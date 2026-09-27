@@ -63,3 +63,15 @@ Tutorial 02는 다음 결과를 저장합니다.
 spring_mass_3d_comparison.gif
 spring_mass_3d_final_states.png
 ```
+
+## Tutorial 03
+
+`tutorial_03_sparse_force_inference.py`는 grasp 위치를 알고 있다고 가정하고(`p0`, `p5`), 두 particle에 필요한 시간별 XYZ 외력을 Warp 자동미분과 Adam으로 추정합니다. GIF에서 목표, 초기 외력(0 N), 최적화된 천의 궤적을 비교합니다.
+
+프로젝트 루트에서 실행:
+
+```bash
+python scripts/tutorial_03_sparse_force_inference.py
+```
+
+결과는 `outputs/tutorial_03/`에 저장됩니다. 힘 `.npy` 배열은 `(11, 36, 3)` 형태이며 단위는 N입니다(시간 knot, particle, XYZ). knot 간격은 0.032초입니다. 목표 힘, 초기 힘, 최적화된 힘과 목표 particle trajectory를 저장합니다.

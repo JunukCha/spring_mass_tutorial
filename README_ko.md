@@ -41,3 +41,28 @@ python scripts/tutorial_02_gravity_collision.py
 ```
 
 결과는 `outputs/tutorial_02/`에 GIF와 최종 상태 PNG로 저장됩니다.
+
+## Tutorial 03
+
+Tutorial 03은 grasp particle 위치를 `p0`, `p5`로 알고 있다고 가정하고, 두 점에 필요한 시간별 외력을 Warp 자동미분과 Adam으로 추정합니다. 시뮬레이션은 36개 particle 전체를 계산하며 loss는 trajectory loss만 사용합니다. GIF에서 Target, 초기 외력(0 N), 최적화 결과를 비교합니다.
+
+```bash
+python scripts/tutorial_03_sparse_force_inference.py
+```
+
+결과는 `outputs/tutorial_03/`에 저장됩니다.
+
+```text
+cloth_trajectory_comparison.gif
+trajectory_and_force.png
+target_trajectory.npy
+ground_truth_force_knots.npy
+initial_force_knots.npy
+optimized_force_knots.npy
+```
+
+힘 배열은 `(11, 36, 3)` 형태이며 단위는 N입니다. 순서는 시간 knot, particle, XYZ 성분이며 knot 간격은 0.032초입니다. Windows CMD에서 `p0`, `p5`의 정답 힘과 추정 힘을 보려면:
+
+```cmd
+python -c "import numpy as np; gt=np.load('outputs/tutorial_03/ground_truth_force_knots.npy'); fit=np.load('outputs/tutorial_03/optimized_force_knots.npy'); [print(f't={k*0.032:.3f}s p{p}: GT={gt[k,p]} Fit={fit[k,p]}') for k in range(len(gt)) for p in (0,5)]"
+```
