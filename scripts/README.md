@@ -48,6 +48,18 @@ python scripts/tutorial_03_sparse_force_inference.py
 
 Outputs are written to `outputs/tutorial_03/`. The `.npy` force arrays are shaped `(11, 36, 3)` in newtons (time knot, particle, XYZ); knots are 0.032 seconds apart. Files include target, initial, and optimized force controls, plus the target particle trajectory.
 
+## Tutorial 03: vertical grasp force inference
+
+`tutorial_03_vertical_grasp_force_inference.py` creates a vertically guided target lift for grasp particles `p0` and `p5`. The inference rollout leaves those particles free and uses Warp autodiff with Adam to fit all three force components, `Fx`, `Fy`, and `Fz`, from zero initialization using trajectory loss.
+
+Run from the project root:
+
+```bash
+python scripts/tutorial_03_vertical_grasp_force_inference.py
+```
+
+Outputs are written to `outputs/tutorial_03_1/`. The GIF compares target, zero-force initial, and optimized cloth trajectories. `trajectory_and_force_comparison.png` plots target and optimized `Fx`, `Fy`, and `Fz` knots together. Force knot arrays have shape `(11, 2, 3)` in newtons (time knot, grasp particle, XYZ); knots are 0.032 seconds apart. The full per-step target force is saved as `target_grasp_forces_xyz.npy` with shape `(80, 2, 3)`. Other arrays include target reaction forces, the target trajectory, and initial and optimized force knots.
+
 ## Tutorial 02 parameterization
 
 The model does not assign an independent stiffness to every spring. It uses a base stiffness and regional scale parameters:

@@ -63,8 +63,27 @@ initial_force_knots.npy
 optimized_force_knots.npy
 ```
 
-The force arrays have shape `(11, 36, 3)` in newtons, indexed by time knot, particle, and XYZ component. Knots are 0.032 seconds apart. To inspect the target and fitted forces at `p0` and `p5` from Windows CMD:
+The force arrays have shape `(11, 36, 3)` in newtons, indexed by time knot, particle, and XYZ component. Knots are 0.032 seconds apart.
 
-```cmd
-python -c "import numpy as np; gt=np.load('outputs/tutorial_03/ground_truth_force_knots.npy'); fit=np.load('outputs/tutorial_03/optimized_force_knots.npy'); [print(f't={k*0.032:.3f}s p{p}: GT={gt[k,p]} Fit={fit[k,p]}') for k in range(len(gt)) for p in (0,5)]"
+## Tutorial 03: vertical grasp force inference
+
+`tutorial_03_vertical_grasp_force_inference.py` generates a target lift while keeping grasp particles `p0` and `p5` at their original X/Y positions. During inference, the grasp particles are free and Adam optimizes their full XYZ forces from zero initialization to match the target trajectory. The force comparison plot shows target, initial, and optimized `Fx`, `Fy`, and `Fz`.
+
+```bash
+python scripts/tutorial_03_vertical_grasp_force_inference.py
 ```
+
+Results are saved to `outputs/tutorial_03_1/`:
+
+```text
+vertical_grasp_force_comparison.gif
+trajectory_and_force_comparison.png
+target_trajectory.npy
+target_force_knots.npy
+target_grasp_reaction_forces.npy
+target_grasp_forces_xyz.npy
+initial_force_knots.npy
+optimized_force_knots.npy
+```
+
+Force knot arrays have shape `(11, 2, 3)` in newtons (time knot, grasp particle, XYZ); knots are 0.032 seconds apart. `target_grasp_forces_xyz.npy` stores the full GT XYZ force at every simulation step with shape `(80, 2, 3)`.

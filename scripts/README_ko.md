@@ -75,3 +75,15 @@ python scripts/tutorial_03_sparse_force_inference.py
 ```
 
 결과는 `outputs/tutorial_03/`에 저장됩니다. 힘 `.npy` 배열은 `(11, 36, 3)` 형태이며 단위는 N입니다(시간 knot, particle, XYZ). knot 간격은 0.032초입니다. 목표 힘, 초기 힘, 최적화된 힘과 목표 particle trajectory를 저장합니다.
+
+## Tutorial 03: 수직 grasp 힘 추정
+
+`tutorial_03_vertical_grasp_force_inference.py`는 grasp particle `p0`, `p5`를 수직 가이드로 들어 올려 GT 궤적을 만듭니다. 힘 추정에서는 grasp 점을 자유롭게 두고 Warp 자동미분과 Adam으로 `Fx`, `Fy`, `Fz`를 모두 0N부터 최적화합니다. 목적 함수는 trajectory loss입니다.
+
+프로젝트 루트에서 실행:
+
+```bash
+python scripts/tutorial_03_vertical_grasp_force_inference.py
+```
+
+결과는 `outputs/tutorial_03_1/`에 저장됩니다. GIF는 목표, 0N 초기 힘, 최적화된 궤적을 비교하며 `trajectory_and_force_comparison.png`는 GT와 최적화된 `Fx`, `Fy`, `Fz` knot를 함께 그립니다. 힘 knot 배열은 `(11, 2, 3)` 형태이며 단위는 N입니다(시간 knot, grasp particle, XYZ). knot 간격은 0.032초입니다. 매 step의 전체 GT 힘은 `target_grasp_forces_xyz.npy`에 `(80, 2, 3)` 형태로 저장됩니다. GT 반력, 목표 궤적, 초기 힘, 최적화된 힘 배열도 함께 저장합니다.

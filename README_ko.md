@@ -61,8 +61,27 @@ initial_force_knots.npy
 optimized_force_knots.npy
 ```
 
-힘 배열은 `(11, 36, 3)` 형태이며 단위는 N입니다. 순서는 시간 knot, particle, XYZ 성분이며 knot 간격은 0.032초입니다. Windows CMD에서 `p0`, `p5`의 정답 힘과 추정 힘을 보려면:
+힘 배열은 `(11, 36, 3)` 형태이며 단위는 N입니다. 순서는 시간 knot, particle, XYZ 성분이며 knot 간격은 0.032초입니다.
 
-```cmd
-python -c "import numpy as np; gt=np.load('outputs/tutorial_03/ground_truth_force_knots.npy'); fit=np.load('outputs/tutorial_03/optimized_force_knots.npy'); [print(f't={k*0.032:.3f}s p{p}: GT={gt[k,p]} Fit={fit[k,p]}') for k in range(len(gt)) for p in (0,5)]"
+## Tutorial 03: 수직 grasp 힘 추정
+
+`tutorial_03_vertical_grasp_force_inference.py`는 GT 궤적을 만들 때 grasp particle `p0`, `p5`의 X/Y 위치를 유지합니다. 힘 추정 단계에서는 grasp 점을 자유롭게 두고, Adam이 GT 궤적을 따라가도록 두 점의 XYZ 힘을 모두 0N에서 최적화합니다. 힘 비교 그래프에서 GT, 초기값, 최적화 결과의 `Fx`, `Fy`, `Fz`를 확인할 수 있습니다.
+
+```bash
+python scripts/tutorial_03_vertical_grasp_force_inference.py
 ```
+
+결과는 `outputs/tutorial_03_1/`에 저장됩니다.
+
+```text
+vertical_grasp_force_comparison.gif
+trajectory_and_force_comparison.png
+target_trajectory.npy
+target_force_knots.npy
+target_grasp_reaction_forces.npy
+target_grasp_forces_xyz.npy
+initial_force_knots.npy
+optimized_force_knots.npy
+```
+
+힘 knot 배열은 `(11, 2, 3)` 형태이며 단위는 N입니다(시간 knot, grasp particle, XYZ 성분). knot 간격은 0.032초입니다. `target_grasp_forces_xyz.npy`에는 매 simulation step의 전체 GT XYZ 힘이 `(80, 2, 3)` 형태로 저장됩니다.
